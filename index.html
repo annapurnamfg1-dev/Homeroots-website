@@ -688,6 +688,24 @@ function renderDocChecklist(){
 }
 
 // ── GOVERNMENT SCHEMES ──────────────────────────────────────
+var materialRates=[
+  {em:'🏗️',nm:'Cement (OPC 53 Grade)',unit:'per 50kg bag',val:'₹385',source:null},
+  {em:'🔩',nm:'TMT Steel (Fe-500)',unit:'per kg',val:'₹58',source:null},
+  {em:'🧱',nm:'Red Brick (Class A)',unit:'per 1000 bricks',val:'₹8,200',source:null},
+  {em:'🪨',nm:'River Sand (M-Sand)',unit:'per brass',val:'₹4,500',source:null},
+  {em:'🎨',nm:'Asian Paints Royale',unit:'per 20L drum',val:'₹5,800',source:null},
+  {em:'🪟',nm:'Vitrified Tiles (600×600)',unit:'per sqft',val:'₹42',source:null}
+];
+function renderMaterialRates(){
+  var c=document.getElementById('materialRatesList'); if(!c) return;
+  c.innerHTML=materialRates.map(function(m){
+    // When a real partner has confirmed this rate, credit them directly above the price —
+    // gives the partner free visibility and gives the customer a real local source
+    // instead of an anonymous "national reference" number.
+    var sourceTag = m.source ? '<div style="font-size:.56rem;color:var(--green);font-weight:700;margin-top:.1rem">✓ '+m.source+'</div>' : '';
+    return '<div class="price-item"><div class="price-item-left"><div class="price-item-em">'+m.em+'</div><div><div class="price-item-nm">'+m.nm+'</div><div class="price-item-unit">'+m.unit+'</div>'+sourceTag+'</div></div><div class="price-item-right"><div class="price-val">'+m.val+'</div><div class="price-change nc">'+(m.source?'Confirmed':'Approx.')+'</div></div></div>';
+  }).join('');
+}
 function renderGovtSchemes(){
   var c=document.getElementById('govtSchemes'); if(!c) return;
   var schemes=[
@@ -2901,9 +2919,6 @@ setTimeout(function(){ if(!chatOpen){ var cu2=document.getElementById('chatUnrea
     <span style="font-size:.68rem;color:#fff;font-family:'Sora',sans-serif;font-weight:500">🏙️ Showing results for: <b id="visitorCityLabel" style="color:#fff;font-family:'Sora',sans-serif;font-weight:700">Detecting your city…</b></span>
     <span style="margin-left:auto;font-size:.62rem;color:#fff;text-decoration:underline;font-family:'Sora',sans-serif;font-weight:600">Change ▾</span>
   </div>
-  <div class="jodhpur-data-note" style="display:none;background:rgba(90,65,45,.06);border-radius:8px;padding:.5rem .7rem;margin:0 .9rem .5rem;font-size:.62rem;color:rgba(90,65,45,.75);line-height:1.5;font-family:'Sora',sans-serif">
-    ℹ️ Land & Plots, Reviews, and Top Rated Partners are currently only live in our Jodhpur pilot — expanding to more cities as we grow. Everything else on this page works nationwide.
-  </div>
 </div>
 
 <!-- ══════════════════════════════════════════════════════ -->
@@ -3547,7 +3562,7 @@ setTimeout(function(){ if(!chatOpen){ var cu2=document.getElementById('chatUnrea
       These Terms are governed by the laws of India. Any disputes shall be subject to the jurisdiction of the courts of Jodhpur, Rajasthan.<br><br>
 
       <b>9. Contact</b><br>
-      For questions about these Terms, WhatsApp us at +91 89493 32550 or email nirmayo@okhdfcbank.
+      For questions about these Terms, WhatsApp us at +91 89493 32550 or email nirmayo.homestudio@gmail.com.
     </div>
   </div>
 </div>
@@ -3593,7 +3608,7 @@ setTimeout(function(){ if(!chatOpen){ var cu2=document.getElementById('chatUnrea
       We may update this Privacy Policy from time to time. Material changes will be reflected with an updated "Last updated" date above.<br><br>
 
       <b>9. Contact</b><br>
-      For any privacy questions or requests, WhatsApp us at +91 89493 32550 or email nirmayo@okhdfcbank.
+      For any privacy questions or requests, WhatsApp us at +91 89493 32550 or email nirmayo.homestudio@gmail.com.
     </div>
   </div>
 </div>
@@ -3633,7 +3648,7 @@ setTimeout(function(){ if(!chatOpen){ var cu2=document.getElementById('chatUnrea
       We may update this Refund Policy from time to time; the version in effect at the time of your payment applies to that transaction.<br><br>
 
       <b>7. Contact</b><br>
-      For billing questions, WhatsApp +91 89493 32550 or email nirmayo@okhdfcbank.
+      For billing questions, WhatsApp +91 89493 32550 or email nirmayo.homestudio@gmail.com.
     </div>
   </div>
 </div>
@@ -4177,14 +4192,7 @@ setTimeout(function(){ if(!chatOpen){ var cu2=document.getElementById('chatUnrea
   <div class="sec-title">📊 Today's Material Rates</div>
   <button class="sec-more" onclick="showToastHome('Full price list coming soon')">Full List →</button>
 </div>
-<div class="price-list">
-  <div class="price-item"><div class="price-item-left"><div class="price-item-em">🏗️</div><div><div class="price-item-nm">Cement (OPC 53 Grade)</div><div class="price-item-unit">per 50kg bag</div></div></div><div class="price-item-right"><div class="price-val">₹385</div><div class="price-change nc">Approx.</div></div></div>
-  <div class="price-item"><div class="price-item-left"><div class="price-item-em">🔩</div><div><div class="price-item-nm">TMT Steel (Fe-500)</div><div class="price-item-unit">per kg</div></div></div><div class="price-item-right"><div class="price-val">₹58</div><div class="price-change nc">Approx.</div></div></div>
-  <div class="price-item"><div class="price-item-left"><div class="price-item-em">🧱</div><div><div class="price-item-nm">Red Brick (Class A)</div><div class="price-item-unit">per 1000 bricks</div></div></div><div class="price-item-right"><div class="price-val">₹8,200</div><div class="price-change nc">Approx.</div></div></div>
-  <div class="price-item"><div class="price-item-left"><div class="price-item-em">🪨</div><div><div class="price-item-nm">River Sand (M-Sand)</div><div class="price-item-unit">per brass</div></div></div><div class="price-item-right"><div class="price-val">₹4,500</div><div class="price-change nc">Approx.</div></div></div>
-  <div class="price-item"><div class="price-item-left"><div class="price-item-em">🎨</div><div><div class="price-item-nm">Asian Paints Royale</div><div class="price-item-unit">per 20L drum</div></div></div><div class="price-item-right"><div class="price-val">₹5,800</div><div class="price-change nc">Approx.</div></div></div>
-  <div class="price-item"><div class="price-item-left"><div class="price-item-em">🪟</div><div><div class="price-item-nm">Vitrified Tiles (600×600)</div><div class="price-item-unit">per sqft</div></div></div><div class="price-item-right"><div class="price-val">₹42</div><div class="price-change nc">Approx.</div></div></div>
-</div>
+<div class="price-list" id="materialRatesList"><!-- Rendered by JS --></div>
 <div class="price-updated">🕐 Indicative national reference prices — branded materials (cement, steel, paint) vary less by region; bulky items like sand and brick can vary more. Always confirm current pricing with your local dealer.</div>
 
 <div class="divider"></div>
@@ -4445,7 +4453,7 @@ setTimeout(function(){ if(!chatOpen){ var cu2=document.getElementById('chatUnrea
     <button onclick="showToastHome('Thanks! We\'ll keep you updated.')" style="background:var(--gold2);color:var(--teal3);border:none;border-radius:8px;padding:.5rem .8rem;font-size:.65rem;font-weight:800;cursor:pointer;font-family:inherit">→</button>
   </div>
 
-  <div class="footer-copy">© 2026 Nirmayo Home Studio · nirmayo.com · +91 89493 32550 · nirmayo@okhdfcbank<br>Made with ❤️ in Jodhpur, Rajasthan</div>
+  <div class="footer-copy">© 2026 Nirmayo Home Studio · nirmayo.com · +91 89493 32550 · nirmayo.homestudio@gmail.com<br>Made with ❤️ in Jodhpur, Rajasthan</div>
 </div>
 <div class="divider"></div>
 
@@ -5366,8 +5374,8 @@ setTimeout(function(){ if(!chatOpen){ var cu2=document.getElementById('chatUnrea
     <div style="margin-bottom:.5rem">
       <input id="projectTitle" placeholder="Project title — e.g. My 3BHK in Sardarpura" style="width:100%;padding:.65rem .8rem;border:none;border-radius:9px;font-size:.82rem;font-family:inherit;outline:none;margin-bottom:.5rem">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:.45rem;margin-bottom:.5rem">
-        <input id="projectArea" placeholder="Your area/locality" style="padding:.6rem .75rem;border:none;border-radius:9px;font-size:.78rem;font-family:inherit;outline:none">
-        <input id="projectCost" placeholder="Total cost (₹)" type="number" style="padding:.6rem .75rem;border:none;border-radius:9px;font-size:.78rem;font-family:inherit;outline:none">
+        <input id="projectArea" placeholder="Your area/locality" style="min-width:0;padding:.6rem .75rem;border:none;border-radius:9px;font-size:.78rem;font-family:inherit;outline:none">
+        <input id="projectCost" placeholder="Total cost (₹)" type="number" style="min-width:0;padding:.6rem .75rem;border:none;border-radius:9px;font-size:.78rem;font-family:inherit;outline:none">
       </div>
       <textarea id="projectDesc" placeholder="Describe your project — what was done, how long it took, what you learnt..." style="width:100%;padding:.65rem .8rem;border:none;border-radius:9px;font-size:.78rem;font-family:inherit;outline:none;resize:none;min-height:65px"></textarea>
     </div>
@@ -13825,6 +13833,7 @@ window.addEventListener('DOMContentLoaded', function(){
   renderBrandCompare();
   renderDocChecklist();
   renderGovtSchemes();
+  renderMaterialRates();
   renderMaterialQuality();
   renderNegotiationGuide();
   renderDisputeGuide();
