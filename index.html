@@ -667,6 +667,62 @@ async function pullPartnersFromSupabase(){
   }catch(e){ console.error('pullPartnersFromSupabase:', e); }
 }
 window.addEventListener('load', function(){ pullPartnersFromSupabase(); });
+
+// ── POSTED JOBS SYNC ──────────────────────────────────────────
+// Same pattern as partners/leads: push on write, pull on load, fail
+// soft. This is what makes the ?req=XXXXX "View Full Request" link
+// actually work when a partner opens it on their OWN phone — before
+// this, the job only existed in the customer's own localStorage.
+async function pushJobToSupabase(job){
+  if(!sb || !job || !job.reqId) return;
+  try{
+    var { error } = await sb.from('posted_jobs').insert({
+      req_code: job.reqId,
+      customer_phone: job.phone || '',
+      category: job.cat || '',
+      city: job.area || '',
+      project_details: { title: job.title, area: job.area, budget: job.budget, timeline: job.timeline, name: job.name },
+      status: 'open'
+    });
+    if(error) console.error('pushJobToSupabase:', error);
+  }catch(e){ console.error('pushJobToSupabase:', e); }
+}
+// Merges every posted job from Supabase into the local hr_my_posted_jobs
+// cache (deduped by reqId) so the job board shows requests from every
+// customer's device, not just this one.
+async function pullPostedJobsFromSupabase(){
+  if(!sb) return;
+  try{
+    var { data, error } = await sb.from('posted_jobs').select('*').order('created_at', { ascending:false });
+    if(error || !data) return;
+    var myJobs = JSON.parse(localStorage.getItem('hr_my_posted_jobs')||'[]');
+    var existingIds = {};
+    myJobs.forEach(function(j){ if(j.reqId) existingIds[j.reqId] = true; });
+    data.forEach(function(row){
+      if(existingIds[row.req_code]) return;
+      var d = row.project_details || {};
+      myJobs.push({
+        em:'📋', title:d.title||row.category, area:d.area||row.city, budget:d.budget||'Not specified',
+        posted:'Recently', cat:row.category, urgent:false,
+        phone:row.customer_phone, name:d.name||'', timeline:d.timeline||'', reqId:row.req_code
+      });
+    });
+    localStorage.setItem('hr_my_posted_jobs', JSON.stringify(myJobs));
+  }catch(e){ console.error('pullPostedJobsFromSupabase:', e); }
+}
+// Direct lookup for the tracking link — checked FIRST so a partner
+// opening the link on a device that never ran the pull-on-load sync
+// still finds the job.
+async function fetchJobByReqCode(reqId){
+  if(!sb || !reqId) return null;
+  try{
+    var { data, error } = await sb.from('posted_jobs').select('*').eq('req_code', reqId).maybeSingle();
+    if(error || !data) return null;
+    var d = data.project_details || {};
+    return { title:d.title||data.category, area:d.area||data.city, budget:d.budget||'Not specified', timeline:d.timeline||'', name:d.name||'' };
+  }catch(e){ console.error('fetchJobByReqCode:', e); return null; }
+}
+window.addEventListener('load', function(){ pullPostedJobsFromSupabase(); });
 </script>
 
 <!-- ── LOADING SCREEN ──────────────────────────────────────── -->
@@ -1072,8 +1128,10 @@ async function submitPostJobForm(){
     + 'Interested? Reply here to accept this job.';
 
   var myJobs = JSON.parse(localStorage.getItem('hr_my_posted_jobs')||'[]');
-  myJobs.unshift({ em:'📋', title:title, area:area, budget:budget||'Not specified', posted:'Just now', cat:cat, urgent:false, phone:phone, name:name, timeline:timeline, reqId:reqId });
+  var newJob = { em:'📋', title:title, area:area, budget:budget||'Not specified', posted:'Just now', cat:cat, urgent:false, phone:phone, name:name, timeline:timeline, reqId:reqId };
+  myJobs.unshift(newJob);
   localStorage.setItem('hr_my_posted_jobs', JSON.stringify(myJobs));
+  pushJobToSupabase(newJob);
   renderJobBoard();
   closePostJobForm();
 
@@ -13920,18 +13978,23 @@ function openAdminVerifyOverlay(){
 // device — a partner opening this link on their own phone won't have that
 // data (no shared backend), so we show what we can and are upfront when we
 // can't find it, rather than pretending the link is broken.
-function handleJobRequestLink(){
+async function handleJobRequestLink(){
   try {
     var params = new URLSearchParams(window.location.search);
     var reqId = params.get('req');
     if(!reqId) return;
-    var myJobs = JSON.parse(localStorage.getItem('hr_my_posted_jobs')||'[]');
-    var job = myJobs.filter(function(j){ return j.reqId === reqId; })[0];
     window.history.replaceState({}, document.title, window.location.pathname);
+    // Check the shared table first — this is what lets a partner open the
+    // link on their OWN phone and still see it, not just the customer's.
+    var job = await fetchJobByReqCode(reqId);
+    if(!job){
+      var myJobs = JSON.parse(localStorage.getItem('hr_my_posted_jobs')||'[]');
+      job = myJobs.filter(function(j){ return j.reqId === reqId; })[0];
+    }
     if(job){
       alert('📋 Request '+reqId+'\n\n'+job.title+'\n📍 '+job.area+'\n💰 '+job.budget+'\n📅 '+job.timeline+'\n👤 '+job.name);
     } else {
-      showToastHome && showToastHome('This request was sent from the customer\'s phone — all the details are in the WhatsApp message itself. Reply there to reach them directly.');
+      showToastHome && showToastHome('This request could not be found — it may be very old or the link is incorrect.');
     }
   } catch(e){ console.error('Job request link error:', e); }
 }
