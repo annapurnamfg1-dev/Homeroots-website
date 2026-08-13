@@ -723,6 +723,30 @@ async function fetchJobByReqCode(reqId){
   }catch(e){ console.error('fetchJobByReqCode:', e); return null; }
 }
 window.addEventListener('load', function(){ pullPostedJobsFromSupabase(); });
+
+// ── REVIEWS SYNC ──────────────────────────────────────────────
+// Writes into the standalone `reviews` table (not just the partner's
+// local .reviews array). Supabase has a trigger that keeps
+// partners.rating in sync with the average of this table automatically,
+// so once this is called, that partner's real platform-wide rating is
+// live in the database even though the site's own rating display still
+// reads the local embedded array for now (a further read-side migration,
+// not done this pass — see plan notes).
+async function recordReviewInSupabase(phone, reviewObj){
+  if(!sb || !phone) return;
+  try{
+    var partnerId = await ensurePartnerInSupabase(phone);
+    if(!partnerId) return;
+    var { error } = await sb.from('reviews').insert({
+      partner_id: partnerId,
+      customer_name: reviewObj.reviewer || reviewObj.reviewerName || 'Anonymous',
+      rating: reviewObj.rating,
+      comment: reviewObj.text || '',
+      verified: !!reviewObj.verified
+    });
+    if(error) console.error('recordReviewInSupabase:', error);
+  }catch(e){ console.error('recordReviewInSupabase:', e); }
+}
 </script>
 
 <!-- ── LOADING SCREEN ──────────────────────────────────────── -->
@@ -10109,6 +10133,7 @@ function saveReviewToPartnerByPhone(phone, reviewObj){
     all[phone].reviews.push(reviewObj);
     localStorage.setItem('hr_partners', JSON.stringify(all));
     syncPartnerToSupabase(phone);
+    recordReviewInSupabase(phone, reviewObj);
     return true;
   }catch(e){ return false; }
 }
@@ -13440,14 +13465,16 @@ function submitPartnerReview(){
   var p = all[prvTargetPhone];
   if(!p){ showToastHome('Partner not found'); return; }
   p.reviews = p.reviews || [];
-  p.reviews.push({
+  var newReview = {
     reviewer: name, rating: prvRating, text: text,
     verified: hasContactedPartner(prvTargetPhone),
     date: new Date().toISOString()
-  });
+  };
+  p.reviews.push(newReview);
   all[prvTargetPhone] = p;
   localStorage.setItem('hr_partners', JSON.stringify(all));
   syncPartnerToSupabase(prvTargetPhone);
+  recordReviewInSupabase(prvTargetPhone, newReview);
   closePartnerReviewForm();
   showToastHome('✅ Review submitted — thank you!');
   if(typeof renderProsShowcase === 'function') renderProsShowcase();
