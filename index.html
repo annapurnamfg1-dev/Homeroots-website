@@ -543,8 +543,8 @@ body:not(.lang-hi) .en{display:block}
 
 /* ── DESKTOP: A SEPARATE PRESENTATION, SAME APP ──────────────
    Per explicit direction: desktop is NOT mobile stretched wide. Below
-   1024px this is 100% untouched — the existing mobile column above.
-   At 1024px+, the mobile-only chrome (phone topbar, phone hero, phone
+   960px this is 100% untouched — the existing mobile column above.
+   At 960px+, the mobile-only chrome (phone topbar, phone hero, phone
    category chips, bottom tab bar) is hidden and replaced by real desktop
    markup below (.desktop-nav, .desktop-hero) that calls the SAME
    underlying functions mobile uses (switchMainTab, openCat, doSearch,
@@ -553,7 +553,7 @@ body:not(.lang-hi) .en{display:block}
    forms, category detail) keep the centered mobile-width column at
    this stage — a deliberate, common pattern (WhatsApp Web) — full
    desktop recomposition of those is a separate future pass. */
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   body { max-width: none; box-shadow: none; padding-bottom: 0; }
 
   /* Hide mobile-only chrome — replaced by .desktop-nav / .desktop-hero below */
@@ -693,7 +693,7 @@ body:not(.lang-hi) .en{display:block}
 }
 
 /* Desktop nav + hero markup is hidden by default (mobile never sees it);
-   the 1024px rule above turns it on. Keeping this separate from mobile's
+   the 960px rule above turns it on. Keeping this separate from mobile's
    .topbar/.hero means editing one never risks breaking the other. */
 .desktop-nav, .desktop-hero, .dh-stats { display: none; }
 
@@ -704,6 +704,12 @@ body:not(.lang-hi) .en{display:block}
 }
 .desktop-nav .dn-logo img { height: 38px; display: block; }
 .desktop-nav .dn-links { display: flex; gap: 1.3rem; font-size: .82rem; font-weight: 700; color: #3A4A42; white-space: nowrap; }
+@media (max-width: 1099px) {
+  .desktop-nav .dn-links { gap: .6rem; font-size: .72rem; }
+  .desktop-nav { padding-left: 1.2rem; padding-right: 1.2rem; }
+  .desktop-nav .dn-right { gap: .35rem; }
+  .desktop-nav .dn-btn-outline, .desktop-nav .dn-btn-solid { padding: .45rem .7rem; font-size: .7rem; }
+}
 .desktop-nav .dn-links a { text-decoration: none; color: inherit; cursor: pointer; }
 .desktop-nav .dn-links a:hover { color: var(--teal2); }
 .desktop-nav .dn-right { display: flex; gap: .7rem; align-items: center; }
@@ -733,7 +739,7 @@ body:not(.lang-hi) .en{display:block}
 .dh-journey-tag { font-size: .82rem; font-weight: 700; color: rgba(255,255,255,.8); letter-spacing: .02em; margin-bottom: 2rem; }
 .dh-journey-tag span { color: #D4AF37; margin: 0 .3rem; }
 
-/* ZONE 2: What Are You Planning? — desktop-only, hidden below 1024px */
+/* ZONE 2: What Are You Planning? — desktop-only, hidden below 960px */
 .dh-plan-section { display: none; }
 .dh-plan-hd { text-align: center; max-width: 700px; margin: 0 auto 2rem; }
 .dh-plan-eyebrow { font-size: .7rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--teal2); margin-bottom: .5rem; }
