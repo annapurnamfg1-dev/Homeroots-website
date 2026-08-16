@@ -146,7 +146,8 @@ body:not(.lang-hi) .en{display:block}
 .cat-chip.active{background:linear-gradient(135deg,var(--green),var(--teal3));color:#fff;box-shadow:0 4px 10px rgba(74,54,38,.35)}
 
 /* ── SECTION HEADER ─────────────────────────────── */
-.sec-hd{display:flex;align-items:center;justify-content:space-between;padding:.8rem .9rem .4rem}
+.sec-hd{display:flex;align-items:center;justify-content:space-between;padding:.8rem .9rem .4rem;flex-wrap:wrap}
+.sec-sub-desktop{display:none}
 .sec-title{font-size:.88rem;font-weight:800;color:var(--text);line-height:1.3}
 .sec-title .hi{font-size:.72rem;font-weight:600;color:var(--text3);margin-top:.1rem}
 .sec-more{font-size:.72rem;color:var(--teal);font-weight:700;cursor:pointer;background:none;border:none;font-family:inherit;padding:0}
@@ -554,6 +555,21 @@ body:not(.lang-hi) .en{display:block}
    this stage — a deliberate, common pattern (WhatsApp Web) — full
    desktop recomposition of those is a separate future pass. */
 @media (min-width: 900px) {
+
+  /* Compact CTA buttons — replace oversized full-width action bars with
+     premium, generously-spaced, right-aligned buttons on desktop only.
+     Mobile keeps its full-width tap-friendly buttons untouched. */
+  .sec-sub-desktop { display: block; width: 100%; font-size: .9rem; color: var(--text2); margin: -.3rem 0 .8rem; }
+  .detect-btn-wrap { text-align: right !important; }
+  .detect-btn {
+    width: auto !important;
+    display: inline-flex !important;
+    padding: .75rem 1.6rem !important;
+    border-radius: 10px !important;
+    box-shadow: 0 4px 14px rgba(74,96,88,.25);
+    transition: transform .15s, box-shadow .15s;
+  }
+  .detect-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(74,96,88,.32); }
   body { max-width: none; box-shadow: none; padding-bottom: 0; }
 
   /* Hide mobile-only chrome — replaced by .desktop-nav / .desktop-hero below */
@@ -4550,7 +4566,9 @@ setTimeout(function(){ if(!chatOpen){ var cu2=document.getElementById('chatUnrea
     </div>
     <div id="calcBreakdown" style="display:none;margin-top:.6rem;background:var(--cream2);border-radius:9px;padding:.65rem"></div>
     <div style="font-size:.6rem;color:var(--text3);margin-top:.5rem;line-height:1.5">City figures reflect real regional construction-cost differentials (industry cost-index data) applied to the Jodhpur base rate — not official municipal figures. Local contractor quotes will vary.</div>
-    <button class="calc-btn" onclick="findContractors()">🏗️ Find Contractors for This Project →</button>
+    <div class="detect-btn-wrap">
+    <button class="calc-btn detect-btn" onclick="findContractors()">🏗️ Find Contractors for This Project →</button>
+    </div>
   </div>
 </div>
 
@@ -4562,6 +4580,7 @@ setTimeout(function(){ if(!chatOpen){ var cu2=document.getElementById('chatUnrea
 <!-- ══════════════════════════════════════════════════════ -->
 <div class="sec-hd">
   <div class="sec-title"><span class="en">📍 Find Professionals Near You</span><span class="hi">📍 अपने पास पेशेवर खोजें</span></div>
+  <div class="sec-sub-desktop">Find trusted professionals for your next home project.</div>
 </div>
 <div style="padding:.2rem .75rem .7rem">
   <div style="background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:.9rem">
@@ -4579,9 +4598,11 @@ setTimeout(function(){ if(!chatOpen){ var cu2=document.getElementById('chatUnrea
         <button onclick="findNearest('painter')" style="background:var(--cream);border:1.5px solid var(--border);border-radius:100px;padding:.35rem .8rem;font-size:.72rem;font-weight:700;cursor:pointer;font-family:inherit">🎨 Painter</button>
         <button onclick="findNearest('carpenter')" style="background:var(--cream);border:1.5px solid var(--border);border-radius:100px;padding:.35rem .8rem;font-size:.72rem;font-weight:700;cursor:pointer;font-family:inherit">🔨 Carpenter</button>
       </div>
-      <button onclick="detectAndFind()" style="width:100%;background:linear-gradient(135deg,#6E8C82,#4A6058);color:#fff;border:none;border-radius:10px;padding:.7rem;font-size:.8rem;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:.5rem">
+      <div class="detect-btn-wrap">
+      <button class="detect-btn" onclick="detectAndFind()" style="width:100%;background:linear-gradient(135deg,#6E8C82,#4A6058);color:#fff;border:none;border-radius:10px;padding:.7rem;font-size:.8rem;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:.5rem">
         <span>📍</span><span>Detect My Location & Find Nearest</span>
       </button>
+      </div>
       <div id="nearestResult" style="display:none;margin-top:.65rem"></div>
     </div>
 
@@ -4589,9 +4610,11 @@ setTimeout(function(){ if(!chatOpen){ var cu2=document.getElementById('chatUnrea
       <div style="font-size:.72rem;color:var(--text2);margin-bottom:.7rem">Select your colony or area to find professionals who have worked nearby.</div>
       <div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.75rem" id="areaChips"><!-- Rendered by JS --></div>
       <div id="hyperlocalResult" style="display:none"><!-- Rendered by JS --></div>
-      <button onclick="detectAreaAuto()" style="width:100%;background:linear-gradient(135deg,#6E8C82,#4A6058);color:#fff;border:none;border-radius:10px;padding:.7rem;font-size:.8rem;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:.5rem">
+      <div class="detect-btn-wrap">
+      <button class="detect-btn" onclick="detectAreaAuto()" style="width:100%;background:linear-gradient(135deg,#6E8C82,#4A6058);color:#fff;border:none;border-radius:10px;padding:.7rem;font-size:.8rem;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:.5rem">
         <span>📍</span><span>Auto-Detect My Area</span>
       </button>
+      </div>
     </div>
   </div>
 </div>
@@ -4797,8 +4820,8 @@ setTimeout(function(){ if(!chatOpen){ var cu2=document.getElementById('chatUnrea
 <div class="cat-grid" id="catGrid">
   <!-- Rendered by JS -->
 </div>
-<div style="padding:.3rem .9rem .2rem">
-  <button onclick="openFindProsPage()" style="width:100%;background:linear-gradient(135deg,#6E8C82,#4A6058);color:#fff;border:none;border-radius:10px;padding:.7rem;font-size:.78rem;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:.4rem">🏗️ View All 148 Categories →</button>
+<div class="detect-btn-wrap" style="padding:.3rem .9rem .2rem">
+  <button class="detect-btn" onclick="openFindProsPage()" style="width:100%;background:linear-gradient(135deg,#6E8C82,#4A6058);color:#fff;border:none;border-radius:10px;padding:.7rem;font-size:.78rem;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:.4rem">🏗️ View All 148 Categories →</button>
 </div>
 
 <div class="divider"></div>
