@@ -556,6 +556,128 @@ body:not(.lang-hi) .en{display:block}
    desktop recomposition of those is a separate future pass. */
 @media (min-width: 900px) {
 
+  /* Desktop narrative reorder — PASS 2 (lower-page restructure).
+     Wrapper boundary expanded from Footer to right after Material
+     Calculator, to reach Compare Professionals / Home Tools cluster /
+     Get a Quote, which live in Tools/Learn/Land/Account tab-panels far
+     below the original Pass-1 boundary. This ONLY runs at desktop
+     width — #desktopFlow is plain display:block (a no-op) below this
+     breakpoint, so mobile's source/scroll order is completely
+     unaffected. Child indices are 1-indexed direct children of
+     #desktopFlow, enumerated and confirmed via the real rendered DOM
+     before assigning order values. Dry-run tested across all 5 tabs
+     and both Jodhpur/non-Jodhpur city states before shipping.
+  */
+  #desktopFlow { display: flex; flex-direction: column; }
+
+  /* ACTIVE JOURNEY */
+  #desktopFlow > *:nth-child(1)  { order: 10; } /* Hero (mobile-only div; real desktop hero lives outside this wrapper) */
+  #desktopFlow > *:nth-child(2)  { order: 11; } /* mobile search wrap (hidden on desktop) */
+  #desktopFlow > *:nth-child(3)  { order: 12; } /* recentSearchRow (hidden on desktop) */
+  #desktopFlow > *:nth-child(4)  { order: 13; } /* trust-row (hidden on desktop) */
+  #desktopFlow > *:nth-child(13) { order: 20; } /* Find Professionals */
+  #desktopFlow > *:nth-child(14) { order: 21; } /* Verified Pros (hidden subtab panel) */
+  #desktopFlow > *:nth-child(15) { order: 22; } /* Discover Professionals + Expert Insights */
+  #desktopFlow > *:nth-child(16) { order: 23; } /* Real Project Photos (hidden subtab panel) */
+  #desktopFlow > *:nth-child(28) { order: 24 !important; display: block !important; } /* Compare Professionals — pulled up from Learn tab, forced visible on desktop */
+  #desktopFlow > *:nth-child(18) { order: 30; } /* Construction Journey */
+  #desktopFlow > *:nth-child(7)  { order: 40; } /* Shop Rooms heading */
+  #desktopFlow > *:nth-child(8)  { order: 41; } /* Shop Rooms cards */
+  #desktopFlow > *:nth-child(9)  { order: 42; } /* Shop Rooms trust line */
+  #desktopFlow > *:nth-child(10) { order: 43; } /* divider before Calculator */
+  #desktopFlow > *:nth-child(11) { order: 44; } /* Calculator */
+  #desktopFlow > *:nth-child(12) { order: 45; } /* divider after Calculator */
+
+  /* TOOLS & INFORMATION */
+  #desktopFlow > *:nth-child(19) { order: 50; } /* Popular Categories + Product Gallery (share one panel) */
+  #desktopFlow > *:nth-child(29) { order: 52 !important; display: block !important; } /* EMI + Timeline Calculators — pulled from Tools tab, Home Tools cluster */
+  #desktopFlow > *:nth-child(30) { order: 53 !important; display: block !important; } /* Vastu Check — pulled from Tools tab, Home Tools cluster */
+  #desktopFlow > *:nth-child(41) { order: 54 !important; display: block !important; } /* Material Calculator — pulled from Tools tab, Home Tools cluster */
+  #desktopFlow > *:nth-child(22) { order: 55; } /* Home Loan / Financing (reframed copy) */
+
+  /* SUPPORTING / DISCOVERY */
+  #desktopFlow > *:nth-child(21) { order: 60; } /* Modern Living (Ideas tab, hidden on Browse by default; visible when Ideas active) */
+  #desktopFlow > *:nth-child(25) { order: 61 !important; display: block !important; } /* Land & Plots — pulled from Land tab; inner .jodhpur-only city gating untouched */
+  #desktopFlow > *:nth-child(27) { order: 62 !important; display: block !important; } /* Reviews — pulled from Learn tab; inner .jodhpur-only city gating untouched */
+  #desktopFlow > *:nth-child(32) { order: 63 !important; display: block !important; } /* Get a Quote — pulled from Account subtab, now visible to first-time visitors */
+
+  /* EXIT / PARTNER */
+  #desktopFlow > *:nth-child(5)  { order: 90; } /* Partner CTA banner */
+  #desktopFlow > *:nth-child(6)  { order: 91; } /* divider after Partner CTA */
+  #desktopFlow > *:nth-child(33) { order: 92 !important; display: block !important; } /* Refer & Earn — pulled from Account subtab, bottom of page */
+
+  /* AI TOOLS RETIREMENT — desktop only, mobile keeps this section as-is */
+  #desktopFlow > *:nth-child(26) { display: none !important; }
+
+  /* Neutral — not part of this restructure, left exactly as their
+     existing tab-gating already governs (no forced visibility, no
+     forced hiding); order values just keep them from defaulting to
+     order:0 and jumping ahead of the real journey when their own tab
+     happens to be active. */
+  #desktopFlow > *:nth-child(17) { order: 70; } /* Today's Material Rates (Tools tab) */
+  #desktopFlow > *:nth-child(20) { order: 71; } /* AI Room Visualiser (disabled) */
+  #desktopFlow > *:nth-child(23) { order: 72; } /* See the Work. Know the Cost. (Ideas tab) */
+  #desktopFlow > *:nth-child(24) { order: 73; } /* Trending in Jodhpur (Ideas tab) */
+  #desktopFlow > *:nth-child(31) { order: 74; } /* Recently Viewed (Account subtab) */
+  #desktopFlow > *:nth-child(34) { order: 75; } /* Language toggle (Account subtab) */
+  #desktopFlow > *:nth-child(35) { order: 76; } /* Emergency Services (Account subtab) */
+  #desktopFlow > *:nth-child(36) { order: 77; } /* How Nirmayo Works (Learn/guides) */
+  #desktopFlow > *:nth-child(37) { order: 78; } /* Who To Hire First (Learn/guides) */
+  #desktopFlow > *:nth-child(38) { order: 79; } /* Scam Protection (Learn/guides) */
+  #desktopFlow > *:nth-child(39) { order: 80; } /* Contract Templates (Learn/guides) */
+  #desktopFlow > *:nth-child(40) { order: 81; } /* Construction Progress Tracker (Tools tab) */
+
+  /* Remove duplicate "What Do You Need?" on desktop — Zone 2
+     ("What Are You Planning?") already covers this exact journey step
+     with the same 6 categories. Mobile keeps both, untouched. */
+  .sec-hd-whatdoyouneed, .problem-grid, .divider-whatdoyouneed { display: none !important; }
+
+  /* Find Professionals Near You — full compaction pass. Reduce overall
+     card height ~35%, make the toggle a real fixed-width segmented
+     control (not a stretched bar), tighten vertical rhythm between
+     toggle/text/chips, and demote the detect button to a lighter
+     secondary CTA sitting naturally under the chips. */
+  #findProsNearYouCard { padding: .3rem .4rem !important; }
+  .near-toggle-wrap {
+    display: flex !important;
+    width: 260px !important;
+    margin-bottom: .35rem !important;
+    background: var(--cream) !important;
+    border-radius: 100px !important;
+    padding: .2rem !important;
+  }
+  #nearToggleTrade, #nearToggleArea {
+    flex: 1 !important;
+    padding: .4rem .6rem !important;
+    border-radius: 100px !important;
+    font-size: .7rem !important;
+  }
+  #nearByTrade > div:first-child, #nearByArea > div:first-child {
+    margin-bottom: .3rem !important;
+    font-size: .7rem !important;
+    line-height: 1.35 !important;
+  }
+  #nearByTrade > div[style*="flex-wrap"], #areaChips {
+    margin-bottom: .1rem !important;
+  }
+  #nearByTrade button[onclick^="findNearest"], #areaChips button {
+    padding: .25rem .6rem !important;
+    font-size: .66rem !important;
+  }
+  #nearByTrade .detect-btn, #nearByArea .detect-btn {
+    width: auto !important;
+    display: inline-flex !important;
+    padding: .4rem .95rem !important;
+    border-radius: 100px !important;
+    font-size: .68rem !important;
+    font-weight: 600 !important;
+    background: none !important;
+    color: var(--teal2) !important;
+    border: 1.5px solid var(--border) !important;
+    box-shadow: none !important;
+  }
+  #nearByTrade .detect-btn:hover, #nearByArea .detect-btn:hover { background: var(--cream) !important; transform: none; box-shadow: none !important; }
+
   /* Compact CTA buttons — replace oversized full-width action bars with
      premium, generously-spaced, right-aligned buttons on desktop only.
      Mobile keeps its full-width tap-friendly buttons untouched. */
@@ -843,15 +965,21 @@ async function recordLeadInSupabase(phone, name, cat, channel, customerPhone){
 async function getRecentLeadCountsForCategory(cat, sinceISO){
   if(!sb) return null;
   try{
-    var { data, error } = await sb.from('leads')
-      .select('partner_id, partners!inner(phone)')
-      .eq('category', cat).gte('created_at', sinceISO);
+    // Calls the get_recent_lead_counts() RPC (Tier 1 RLS) instead of
+    // reading the leads table directly — the table itself has no
+    // public SELECT policy anymore, only this aggregate-only RPC does.
+    // The RPC returns an array of {phone, cnt} rows; reshape it into
+    // the phone-keyed object getRotatedProsForLead() actually expects
+    // (sharedCounts[p.ph]) — same output shape as before, new source.
+    var { data, error } = await sb.rpc('get_recent_lead_counts', {
+      p_category: cat,
+      p_since: sinceISO
+    });
     if(error){ console.error('getRecentLeadCountsForCategory:', error); return null; }
     var counts = {};
-    data.forEach(function(row){
-      var ph = row.partners && row.partners.phone;
-      if(!ph) return;
-      counts[ph] = (counts[ph]||0) + 1;
+    (data||[]).forEach(function(row){
+      if(!row.phone) return;
+      counts[row.phone] = row.cnt;
     });
     return counts;
   }catch(e){ console.error('getRecentLeadCountsForCategory:', e); return null; }
@@ -994,20 +1122,27 @@ async function recordReviewInSupabase(phone, reviewObj){
 }
 
 // ── PHOTO STORAGE (Supabase Storage) ──────────────────────────
-// Uploads a partner's portfolio photo to the "partner-photos" Storage
-// bucket instead of embedding it as base64 in localStorage/Supabase's
-// partners.photos column. Returns a promise resolving to the public
-// URL, or null on failure (caller falls back to base64 so the upload
-// still works, just less efficiently, if Storage is unreachable).
+// PHASE 2A — routes uploads through the "upload-partner-photo" Edge
+// Function instead of writing directly to a public Storage bucket.
+// The browser never touches Storage directly anymore. The Edge
+// Function validates real file content (not filename/MIME), re-
+// encodes the image (stripping EXIF), and writes it into a PRIVATE
+// quarantine bucket — never a public URL. There is no moderation/
+// publish step yet, so this intentionally returns "pending review"
+// status, not a displayable image URL. Callers must not treat a
+// successful call as "safe to show publicly."
 async function uploadPhotoToStorage(file){
   if(!sb) return null;
   try{
-    var ext = (file.name && file.name.includes('.')) ? file.name.split('.').pop() : 'jpg';
-    var path = (AUTH.partnerPhone||'unknown') + '/' + Date.now() + '_' + Math.floor(Math.random()*10000) + '.' + ext;
-    var { error } = await sb.storage.from('partner-photos').upload(path, file, { cacheControl: '3600', upsert: false });
+    var formData = new FormData();
+    formData.append('file', file);
+    var { data, error } = await sb.functions.invoke('upload-partner-photo', { body: formData });
     if(error){ console.error('uploadPhotoToStorage:', error); return null; }
-    var { data } = sb.storage.from('partner-photos').getPublicUrl(path);
-    return data && data.publicUrl ? data.publicUrl : null;
+    if(!data || !data.success){ console.error('uploadPhotoToStorage: rejected —', data && data.error); return null; }
+    // No public URL is returned by design — the object is in
+    // quarantine, not publicly visible. Callers get a status object,
+    // not something to render as an <img src>.
+    return { pendingReview: true, quarantinePath: data.quarantinePath };
   }catch(e){ console.error('uploadPhotoToStorage:', e); return null; }
 }
 </script>
@@ -4326,6 +4461,13 @@ setTimeout(function(){ if(!chatOpen){ var cu2=document.getElementById('chatUnrea
 </div>
 
 <!-- ══════════════════════════════════════════════════════ -->
+<!-- DESKTOP-ONLY REORDER WRAPPER — mobile stays in natural
+     source order (this div is display:block, i.e. a no-op,
+     below the desktop breakpoint). At desktop width, flex+order
+     visually resequences sections per the approved narrative
+     without moving a single line of the shared mobile HTML. -->
+<div id="desktopFlow">
+<!-- ══════════════════════════════════════════════════════ -->
 <!-- SECTION 1: HERO -->
 <!-- ══════════════════════════════════════════════════════ -->
 <div class="hero">
@@ -4580,11 +4722,11 @@ setTimeout(function(){ if(!chatOpen){ var cu2=document.getElementById('chatUnrea
 <!-- ══════════════════════════════════════════════════════ -->
 <div class="sec-hd">
   <div class="sec-title"><span class="en">📍 Find Professionals Near You</span><span class="hi">📍 अपने पास पेशेवर खोजें</span></div>
-  <div class="sec-sub-desktop">Find trusted professionals for your next home project.</div>
+  <div class="sec-sub-desktop">Need someone nearby right now? Get matched instantly.</div>
 </div>
 <div style="padding:.2rem .75rem .7rem">
-  <div style="background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:.9rem">
-    <div style="display:flex;gap:.4rem;margin-bottom:.8rem;background:var(--cream);border-radius:10px;padding:.25rem">
+  <div id="findProsNearYouCard" style="background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:.9rem">
+    <div class="near-toggle-wrap" style="display:flex;gap:.4rem;margin-bottom:.8rem;background:var(--cream);border-radius:10px;padding:.25rem">
       <button id="nearToggleTrade" onclick="switchNearToggle('trade')" style="flex:1;background:#fff;border:none;border-radius:8px;padding:.5rem;font-size:.74rem;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 1px 3px rgba(0,0,0,.1)">By Trade</button>
       <button id="nearToggleArea" onclick="switchNearToggle('area')" style="flex:1;background:none;border:none;border-radius:8px;padding:.5rem;font-size:.74rem;font-weight:700;cursor:pointer;font-family:inherit;color:var(--text2)">By Area</button>
     </div>
@@ -4627,7 +4769,7 @@ setTimeout(function(){ if(!chatOpen){ var cu2=document.getElementById('chatUnrea
 <!-- ══════════════════════════════════════════════════════ -->
 <!-- SECTION 3: WHAT IS YOUR PROBLEM? -->
 <!-- ══════════════════════════════════════════════════════ -->
-<div class="sec-hd">
+<div class="sec-hd sec-hd-whatdoyouneed">
   <div class="sec-title"><span class="en">🔍 What Do You Need?</span><span class="hi">🔍 आपको क्या चाहिए?</span></div>
 </div>
 <div class="problem-grid">
@@ -4657,7 +4799,7 @@ setTimeout(function(){ if(!chatOpen){ var cu2=document.getElementById('chatUnrea
   </div>
 </div>
 
-<div class="divider"></div>
+<div class="divider divider-whatdoyouneed"></div>
 
 </div><!-- /tab:pros -->
 <div data-tab="pros" data-subtab="verified" class="tab-panel" style="display:none">
@@ -4997,8 +5139,8 @@ setTimeout(function(){ if(!chatOpen){ var cu2=document.getElementById('chatUnrea
 <!-- ══════════════════════════════════════════════════════ -->
 <div class="loan-banner">
   <div class="loan-left">
-    <div class="loan-sup">🏦 Home Loan Assistance</div>
-    <div class="loan-title">Check Your Home Loan Eligibility</div>
+    <div class="loan-sup">🏦 Planning Your Budget?</div>
+    <div class="loan-title">Explore home-financing options and estimate your EMI</div>
     <div class="loan-sub">SBI · HDFC · LIC · PNB · Bank of Baroda</div>
   </div>
   <button class="loan-btn" onclick="openCat('homeloan')">Check →</button>
@@ -5209,9 +5351,9 @@ setTimeout(function(){ if(!chatOpen){ var cu2=document.getElementById('chatUnrea
   <div style="background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:.85rem">
     <div style="font-size:.78rem;font-weight:800;color:var(--teal);margin-bottom:.65rem">🏦 EMI Calculator</div>
     <div style="font-size:.65rem;font-weight:700;color:var(--text2);margin-bottom:.25rem">Loan Amount (₹)</div>
-    <input type="number" id="emiLoan" placeholder="e.g. 3000000" oninput="calcEMI()" style="width:100%;padding:.5rem .65rem;border:1.5px solid var(--border);border-radius:8px;font-size:.78rem;font-family:inherit;outline:none;margin-bottom:.45rem">
+    <input type="number" id="emiLoan" placeholder="e.g. 3000000" oninput="calcEMISimple()" style="width:100%;padding:.5rem .65rem;border:1.5px solid var(--border);border-radius:8px;font-size:.78rem;font-family:inherit;outline:none;margin-bottom:.45rem">
     <div style="font-size:.65rem;font-weight:700;color:var(--text2);margin-bottom:.25rem">Tenure (Years)</div>
-    <select id="emiYears" onchange="calcEMI()" style="width:100%;padding:.5rem .65rem;border:1.5px solid var(--border);border-radius:8px;font-size:.78rem;font-family:inherit;outline:none;margin-bottom:.45rem">
+    <select id="emiYears" onchange="calcEMISimple()" style="width:100%;padding:.5rem .65rem;border:1.5px solid var(--border);border-radius:8px;font-size:.78rem;font-family:inherit;outline:none;margin-bottom:.45rem">
       <option value="10">10 years</option>
       <option value="15">15 years</option>
       <option value="20" selected>20 years</option>
@@ -5584,6 +5726,7 @@ setTimeout(function(){ if(!chatOpen){ var cu2=document.getElementById('chatUnrea
 <div class="divider"></div>
 
 </div><!-- /tab:tools -->
+</div><!-- /desktopFlow -->
 <div data-tab="pros" data-subtab="verified" class="tab-panel" style="display:none">
 <!-- ══════════════════════════════════════════════════════ -->
 <!-- SECTION 32: MOST HIRED / LEADERBOARD -->
@@ -7625,28 +7768,22 @@ function pgSetMain(i){
 async function pgAddPhoto(input){
   var file = input.files && input.files[0];
   if(!file) return;
-  showToastHome('📤 Uploading photo...');
-  var url = await uploadPhotoToStorage(file);
-  if(url){
-    var p = getPartnerProfile();
-    p.photos = p.photos || [];
-    p.photos.push({ img: url, caption: '', products: [], totalPrice: '', featured: false });
-    savePartnerProfile(p);
-    renderPgList();
-    showToastHome('📷 Photo added');
+  showToastHome('📤 Uploading and checking photo...');
+  var result = await uploadPhotoToStorage(file);
+  if(result && result.pendingReview){
+    // PHASE 2A: no moderation/publish step exists yet, so this
+    // intentionally does NOT add anything to p.photos (the array
+    // that drives the public gallery). Nothing here is visible to
+    // anyone yet — that's correct, not a bug, until a later phase
+    // builds the review step that promotes it out of quarantine.
+    showToastHome('✅ Photo received — pending review before it goes live');
     return;
   }
-  // Storage failed — fall back to the old base64-in-place behavior so the upload still works
-  var reader = new FileReader();
-  reader.onload = function(e){
-    var p = getPartnerProfile();
-    p.photos = p.photos || [];
-    p.photos.push({ img: e.target.result, caption: '', products: [], totalPrice: '', featured: false });
-    savePartnerProfile(p);
-    renderPgList();
-    showToastHome('📷 Photo added');
-  };
-  reader.readAsDataURL(file);
+  // Upload was rejected or failed validation — do NOT fall back to
+  // publishing the raw file. Falling back here would let anyone
+  // bypass every check above just by causing the Edge Function
+  // call to fail.
+  showToastHome('❌ Photo could not be uploaded — please try a different image');
 }
 function pgUpdateCaption(i, val){
   var p = getPartnerProfile();
@@ -7664,27 +7801,15 @@ async function pgAddExtraPhoto(i, input){
   if(!file) return;
   var pCheck = getPartnerProfile();
   if(pCheck.photos[i].extraPhotos && pCheck.photos[i].extraPhotos.length >= 6){ showToastHome('Maximum 6 extra photos per project'); return; }
-  showToastHome('📤 Uploading photo...');
-  var url = await uploadPhotoToStorage(file);
-  if(url){
-    var p = getPartnerProfile();
-    p.photos[i].extraPhotos = p.photos[i].extraPhotos || [];
-    p.photos[i].extraPhotos.push(url);
-    savePartnerProfile(p);
-    renderPgList();
+  showToastHome('📤 Uploading and checking photo...');
+  var result = await uploadPhotoToStorage(file);
+  if(result && result.pendingReview){
+    // Same reasoning as pgAddPhoto — nothing is added to the
+    // publicly-visible extraPhotos array yet.
+    showToastHome('✅ Photo received — pending review before it goes live');
     return;
   }
-  // Storage failed — fall back to the old base64-in-place behavior so the upload still works
-  var reader = new FileReader();
-  reader.onload = function(e){
-    var p = getPartnerProfile();
-    p.photos[i].extraPhotos = p.photos[i].extraPhotos || [];
-    if(p.photos[i].extraPhotos.length >= 6){ showToastHome('Maximum 6 extra photos per project'); return; }
-    p.photos[i].extraPhotos.push(e.target.result);
-    savePartnerProfile(p);
-    renderPgList();
-  };
-  reader.readAsDataURL(file);
+  showToastHome('❌ Photo could not be uploaded — please try a different image');
 }
 function pgRemoveExtraPhoto(i, ei){
   var p = getPartnerProfile();
@@ -9913,7 +10038,7 @@ function renderReviews(){
 }
 
 // ── EMI CALCULATOR ─────────────────────────────────────────
-function calcEMI(){
+function calcEMISimple(){
   var P=parseFloat(document.getElementById('emiLoan').value)||0;
   var n=parseFloat(document.getElementById('emiYears').value)*12;
   var r=8.5/12/100;
