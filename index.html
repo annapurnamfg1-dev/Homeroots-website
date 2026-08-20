@@ -1132,18 +1132,24 @@ async function recordReviewInSupabase(phone, reviewObj){
 // status, not a displayable image URL. Callers must not treat a
 // successful call as "safe to show publicly."
 async function uploadPhotoToStorage(file){
-  if(!sb) return null;
+  if(!sb) return { success:false, error:'Supabase client not initialized (sb is null)' };
   try{
     var formData = new FormData();
     formData.append('file', file);
     var { data, error } = await sb.functions.invoke('upload-partner-photo', { body: formData });
-    if(error){ console.error('uploadPhotoToStorage:', error); return null; }
-    if(!data || !data.success){ console.error('uploadPhotoToStorage: rejected —', data && data.error); return null; }
+    if(error){
+      console.error('uploadPhotoToStorage:', error);
+      return { success:false, error: (error.message||String(error)), errorName: error.name, errorStatus: error.status };
+    }
+    if(!data || !data.success){
+      console.error('uploadPhotoToStorage: rejected —', data && data.error);
+      return { success:false, error: (data && data.error) || 'Edge Function rejected the file (no reason given)' };
+    }
     // No public URL is returned by design — the object is in
     // quarantine, not publicly visible. Callers get a status object,
     // not something to render as an <img src>.
     return { pendingReview: true, quarantinePath: data.quarantinePath };
-  }catch(e){ console.error('uploadPhotoToStorage:', e); return null; }
+  }catch(e){ console.error('uploadPhotoToStorage:', e); return { success:false, error: (e.message||String(e)), errorName: e.name }; }
 }
 </script>
 
@@ -7783,7 +7789,12 @@ async function pgAddPhoto(input){
   // publishing the raw file. Falling back here would let anyone
   // bypass every check above just by causing the Edge Function
   // call to fail.
-  showToastHome('❌ Photo could not be uploaded — please try a different image');
+  // TEMPORARY DIAGNOSTIC (Phase 2A troubleshooting) — shows the real
+  // error instead of a generic message, to find why uploads aren't
+  // reaching the Edge Function. Revert to the generic message once
+  // the pipeline is confirmed working end-to-end.
+  var errMsg = (result && result.error) ? result.error : 'Unknown error (no details returned)';
+  showToastHome('❌ Upload failed: ' + errMsg);
 }
 function pgUpdateCaption(i, val){
   var p = getPartnerProfile();
@@ -7809,7 +7820,10 @@ async function pgAddExtraPhoto(i, input){
     showToastHome('✅ Photo received — pending review before it goes live');
     return;
   }
-  showToastHome('❌ Photo could not be uploaded — please try a different image');
+  // TEMPORARY DIAGNOSTIC (Phase 2A troubleshooting) — see pgAddPhoto
+  // for details; revert once the pipeline is confirmed working.
+  var errMsg2 = (result && result.error) ? result.error : 'Unknown error (no details returned)';
+  showToastHome('❌ Upload failed: ' + errMsg2);
 }
 function pgRemoveExtraPhoto(i, ei){
   var p = getPartnerProfile();
