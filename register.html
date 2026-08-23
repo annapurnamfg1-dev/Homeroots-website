@@ -28,6 +28,12 @@ var SHEETS_CONFIG = {
   web_app_url: 'YOUR_APPS_SCRIPT_WEB_APP_URL'
   // e.g. 'https://script.google.com/macros/s/AKfycb.../exec'
 };
+// ── Phase 1B Registration Submission Config ─────────────────
+// Public Edge Function endpoint (deployed function slug: smooth-task).
+var REGISTER_PARTNER_ENDPOINT = 'https://olbwsqyqhxzsxlwpwpot.supabase.co/functions/v1/smooth-task';
+// Legacy Supabase anon/public key — intentionally client-visible.
+// Never place service_role or database connection credentials here.
+var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9sYndzcXlxaHh6c3hsd3B3cG90Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2MDQ1NzksImV4cCI6MjEwMjE4MDU3OX0.RNyy4ksn09n2R3PhqdZcdWJCDn5KLFp-sMIx7miKYS0';
 (function(){
   if(EMAILJS_CONFIG.public_key !== 'YOUR_PUBLIC_KEY'){
     emailjs.init({publicKey: EMAILJS_CONFIG.public_key});
@@ -707,6 +713,17 @@ function save(){
     localStorage.setItem('hr_q4_current_key',key);
     localStorage.setItem('hr_q4',JSON.stringify(D)); // keep fallback
   }catch(e){}
+}
+// ── Phase 1B: stable per-session submission identifier ───────
+// Generated once, reused across retries via the existing D/save() mechanism.
+// Client-side context only — not a durable idempotency guarantee.
+function generateClientSubmissionId(){
+  if(!D.client_submission_id){
+    D.client_submission_id = (crypto.randomUUID ? crypto.randomUUID() :
+      'csid-'+Date.now()+'-'+Math.random().toString(36).slice(2));
+    save();
+  }
+  return D.client_submission_id;
 }
 function load(){
   try{
@@ -3313,28 +3330,168 @@ function buildWAMsg(){
     +'_via Nirmayo_';
 }
 
+// ── Phase 1B: submit structured registration data to Supabase ──
+// Plain fetch() to the public Edge Function endpoint — no supabase-js SDK.
+// Authenticated with the anon key, same as any public Supabase Edge Function.
+function submitPhase1BRegistration(D){
+  var structuredKeys = ['architect','interior','property'];
+  var structured_memberships = (D.selectedTypes||[])
+    .filter(function(k){ return structuredKeys.indexOf(k)>=0; })
+    .map(function(k){
+      var td_k = D.typeData && D.typeData[k] ? D.typeData[k] : {};
+      return {
+        category_key: k,
+        design_styles: D.designStyles||[],
+        differentiators: D.usp||'',
+        services: td_k.sp_services||[]
+      };
+    });
+
+  var payload = {
+    partner_core: {
+      business_name: D.bn||'',
+      phone: D.mb||'',
+      email: D.email||'',
+      gst_number: D.gst||'',
+      pan_number: D.pan||'',
+      msme_number: D.msme||'',
+      service_radius_km: D.radius||25,
+      city: D.city||'',
+      payment_modes: D.payment_modes||[],
+      category: (D.selectedTypes && D.selectedTypes[0]) || 'general'
+    },
+    structured_memberships: structured_memberships,
+    client_submission_id: generateClientSubmissionId()
+  };
+
+  return fetch(REGISTER_PARTNER_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+    },
+    body: JSON.stringify(payload)
+  })
+  .then(function(res){
+    // Read as text first — a 500, a cold-start crash, or a CORS/edge
+    // platform error can return HTML/empty body instead of JSON, and
+    // res.json() would throw and get misclassified as a network error.
+    return res.text().then(function(text){
+      var parsed = null;
+      try{ parsed = text ? JSON.parse(text) : null; }catch(e){ parsed = null; }
+
+      if(!res.ok){
+        // Server was reached but rejected the request — NOT a network
+        // failure. Surface the HTTP status; use the Edge Function's own
+        // reason if it sent valid JSON, otherwise a generic message.
+        return {
+          success:false,
+          stage:(parsed && parsed.stage) || 'http',
+          http_status: res.status,
+          reason:(parsed && parsed.reason) || ('Server rejected the request (HTTP '+res.status+')')
+        };
+      }
+      // res.ok — but success is ONLY ever true when the Edge Function's
+      // own JSON explicitly says so with the literal boolean `true`.
+      // {"success":"true"} or {"success":1} are NOT accepted — a truthy-
+      // but-non-boolean value is normalized to failure, not passed through.
+      if(parsed && parsed.success === true){
+        return {
+          success:true,
+          stage: parsed.stage || 'complete',
+          http_status: res.status,
+          reason: parsed.reason || ''
+        };
+      }
+      // HTTP 200 but no valid {success:true,...} — malformed shape,
+      // truthy-non-boolean success, or explicit success:false. Always
+      // normalized to the same failure shape, never passed through raw.
+      return {
+        success:false,
+        stage:(parsed && parsed.stage) || 'http',
+        http_status: res.status,
+        reason:(parsed && parsed.reason) || 'Unexpected response from server'
+      };
+    });
+  })
+  .catch(function(e){
+    // fetch() itself rejected — genuine network failure (DNS, offline,
+    // CORS preflight blocked, etc.) — the server was never reached.
+    console.error('Registration submission network error:', e);
+    return { success:false, stage:'network', reason:'Could not reach the server' };
+  });
+}
+
+// ── Phase 1B: failure UI — re-enables retry, keeps local data intact ──
+function showRegistrationFailureState(result){
+  var msg = 'We could not confirm your registration with our server. ';
+  if(result.stage==='partner_core' && result.reason && result.reason.indexOf('already registered')>=0){
+    msg = 'This phone number is already registered with Nirmayo.';
+  } else {
+    msg += 'Your answers are saved on this device — please try submitting again.';
+  }
+  showToast(msg);
+  // Re-enable the shared Next/Submit button so the partner can retry.
+  // btnNext is used throughout the questionnaire for next(); this only
+  // ever runs from inside doSubmit(), which is only ever reached from the
+  // final "legal" step — so re-enabling it here cannot affect any earlier
+  // step's normal behavior.
+  var btn = document.getElementById('btnNext');
+  if(btn){ btn.disabled = false; btn.textContent = 'Try Again →'; }
+}
+
 // ── Step 1: Save data, show send-choice screen ───────────────
 function doSubmit(){
-  D.regId='HR-'+Date.now().toString().slice(-7);
+  // ── Prevent double-click / concurrent submission ──────────────────
+  // btnNext is the SHARED Next/Submit button used across every step of
+  // the questionnaire. This lock is scoped safely because doSubmit() is
+  // only ever reached from next() when secs[idx]==='legal' (verified —
+  // it is the sole call site in the entire file) — so disabling btnNext
+  // here can never affect its behavior on any earlier step; the disable
+  // only ever takes effect at the one moment doSubmit() actually runs.
+  var btn = document.getElementById('btnNext');
+  if(btn){
+    if(btn.disabled) return;   // a submission is already in flight
+    btn.disabled = true;
+    btn.textContent = 'Submitting…';
+  }
+
+  // regId: generate ONLY if one doesn't already exist, so a retry after a
+  // failed Edge Function call keeps presenting the SAME registration ID
+  // to the partner (WhatsApp text, email subject, success screen) rather
+  // than minting a new one and orphaning the previous hr_vendor_<regId>
+  // localStorage entry. client_submission_id (generated separately,
+  // already guarded the same way) is preserved identically across retries.
+  if(!D.regId){
+    D.regId='HR-'+Date.now().toString().slice(-7);
+  }
   D.submittedAt=new Date().toISOString();
   save();
-  saveVendorToHomeroots();
-  sendEmailAlert(D);
-  saveToGoogleSheet(D);
-  // ── Sync to homepage partner display ─────────────────────
-  syncToHomepage({
-    business_name: D.bn,
-    owner_name:    D.on_,
-    whatsapp:      D.mb,
-    categories:    D.selectedTypes.map(function(k){ return VT[k]?VT[k].nm:k; }).join(', '),
-    city:          D.city || '',
-    year_est:      D.year_est || '1-3',
-    reg_id:        D.regId,
-    submitted_at:  D.submittedAt,
-    plan:          D.plan || (isFreeCategorySelection(D.selectedTypes) ? 'Free Forever' : 'Pending Payment'),
-    brands:        collectAllBrands(),
+  saveVendorToHomeroots();      // UNCHANGED — localStorage always succeeds first
+
+  submitPhase1BRegistration(D).then(function(result){
+    if(result && result.success){
+      sendEmailAlert(D);
+      saveToGoogleSheet(D);
+      // ── Sync to homepage partner display ─────────────────────
+      syncToHomepage({
+        business_name: D.bn,
+        owner_name:    D.on_,
+        whatsapp:      D.mb,
+        categories:    D.selectedTypes.map(function(k){ return VT[k]?VT[k].nm:k; }).join(', '),
+        city:          D.city || '',
+        year_est:      D.year_est || '1-3',
+        reg_id:        D.regId,
+        submitted_at:  D.submittedAt,
+        plan:          D.plan || (isFreeCategorySelection(D.selectedTypes) ? 'Free Forever' : 'Pending Payment'),
+        brands:        collectAllBrands(),
+      });
+      showSubmitChoiceScreen();
+    } else {
+      showRegistrationFailureState(result || {});
+    }
   });
-  showSubmitChoiceScreen();
 }
 
 // ── Submit choice screen — how to send to Nirmayo ─────────
