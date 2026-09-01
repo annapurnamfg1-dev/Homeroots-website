@@ -2441,311 +2441,10 @@ function saveVendorToHomeroots(){
 }
 
 // ════════════════════════════════════════════════════════════════
-// RAZORPAY PAYMENT GATEWAY
-// ════════════════════════════════════════════════════════════════
-// HOW TO GO LIVE (3 steps):
-//   1. Sign up / log in at https://dashboard.razorpay.com (needs your business
-//      KYC + bank account — Razorpay verifies this, usually within 1-2 days)
-//   2. Go to Settings → API Keys → Generate Live Key
-//   3. Copy the key that starts with "rzp_live_" and paste it below,
-//      replacing 'rzp_test_YourKeyHere' — nothing else needs to change.
-// Until a real key is added here, the form automatically and gracefully
-// falls back to the UPI payment flow below (homeroots@ybl) — partners are
-// never shown a broken checkout.
-// ════════════════════════════════════════════════════════════════
+// Payment is deferred until Nirmayo launches in the partner's area.
+// Plumber and Electrician remain permanently free.
+// No payment is collected during registration.
 
-var RAZORPAY_CONFIG = {
-  key_id: 'rzp_test_YourKeyHere',  // ← PASTE YOUR LIVE KEY HERE (starts with rzp_live_)
-  currency: 'INR',
-  name: 'Nirmayo',
-  description: 'Nirmayo Partner Listing — ₹2,499 + 18% GST/year',
-  image: 'https://nirmayo/logo.png',
-  theme: { color: '#1E3A35' },
-  prefill: {
-    name: '',
-    email: '',
-    contact: '',
-  },
-  notes: {
-    platform: 'Nirmayo',
-    type: 'vendor_annual_listing',
-  },
-};
-
-function isRazorpayConfigured(){
-  var k = RAZORPAY_CONFIG.key_id;
-  return !!k && k.indexOf('rzp_live_') === 0;
-}
-
-function initRazorpayPayment(vendorData, onSuccess, onFailure){
-  // Load Razorpay SDK if not already loaded
-  if(typeof Razorpay === 'undefined'){
-    var script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    script.onload = function(){
-      startPayment(vendorData, onSuccess, onFailure);
-    };
-    script.onerror = function(){
-      // Fallback to UPI if Razorpay fails to load
-      showUPIFallback(vendorData, onSuccess);
-    };
-    document.head.appendChild(script);
-  } else {
-    startPayment(vendorData, onSuccess, onFailure);
-  }
-}
-
-function startPayment(vendorData, onSuccess, onFailure){
-  var FREE_TYPES = ['plumber','electrician'];
-  var isFreeCategory = vendorData.selectedTypes && vendorData.selectedTypes.length > 0 &&
-    vendorData.selectedTypes.every(function(t){
-      var k = t.k || t;
-      return FREE_TYPES.indexOf(k) >= 0;
-    });
-
-  if(isFreeCategory){
-    // Free tier — skip payment
-    onSuccess({
-      razorpay_payment_id: 'FREE_' + Date.now(),
-      razorpay_order_id: 'FREE_ORDER',
-      razorpay_signature: 'FREE',
-      amount: 0,
-      tier: 'free',
-    });
-    return;
-  }
-
-  // If the live Razorpay key hasn't been set up yet, skip straight to the
-  // already-working UPI flow instead of opening a checkout that will fail confusingly.
-  if(!isRazorpayConfigured()){
-    showUPIFallback(vendorData, onSuccess);
-    return;
-  }
-
-  var options = {
-    key: RAZORPAY_CONFIG.key_id,
-    amount: 294900,  // ₹2,949 (₹2,499 + 18% GST) in paise
-    currency: 'INR',
-    name: RAZORPAY_CONFIG.name,
-    description: RAZORPAY_CONFIG.description,
-    image: RAZORPAY_CONFIG.image,
-    prefill: {
-      name: vendorData.on_ || vendorData.bn || '',
-      email: vendorData.email || '',
-      contact: vendorData.mb || '',
-    },
-    notes: {
-      business_name: vendorData.bn || '',
-      city: vendorData.city || '',
-      gst: vendorData.gst || '',
-      platform: 'Nirmayo',
-    },
-    theme: RAZORPAY_CONFIG.theme,
-    handler: function(response){
-      // Payment successful
-      response.amount = 294900;
-      response.tier = 'paid';
-      onSuccess(response);
-    },
-    modal: {
-      ondismiss: function(){
-        if(onFailure) onFailure('payment_cancelled');
-      },
-    },
-  };
-
-  try {
-    var rzp = new Razorpay(options);
-    rzp.on('payment.failed', function(response){
-      if(onFailure) onFailure(response.error);
-    });
-    rzp.open();
-  } catch(e) {
-    console.error('Razorpay error:', e);
-    showUPIFallback(vendorData, onSuccess);
-  }
-}
-
-function showUPIFallback(vendorData, onSuccess){
-  var modal = document.createElement('div');
-  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99999;display:flex;align-items:center;justify-content:center;padding:1rem';
-  var card = document.createElement('div');
-  card.style.cssText = 'background:#fff;border-radius:16px;padding:1.5rem;max-width:360px;width:100%;text-align:center';
-  card.innerHTML = '<div style="font-size:2rem;margin-bottom:.5rem">💳</div>'
-    + '<div style="font-family:Cormorant Garamond,serif;font-size:1.2rem;font-weight:700;color:#1E3A35;margin-bottom:.35rem">Pay via UPI</div>'
-    + '<div style="font-size:.75rem;color:#666;margin-bottom:1rem">Scan QR or use UPI ID to pay ₹2,949 (₹2,499 + 18% GST)</div>'
-    + '<div style="background:#F0FBF8;border-radius:12px;padding:1rem;margin-bottom:1rem">'
-      + '<div style="font-size:.65rem;color:#888;margin-bottom:.3rem">UPI ID</div>'
-      + '<div style="font-size:1rem;font-weight:800;color:#1E3A35;letter-spacing:.05em">homeroots@ybl</div>'
-      + '<div style="font-size:.65rem;color:#888;margin-top:.5rem">Amount</div>'
-      + '<div style="font-size:1.4rem;font-weight:800;color:#C4956A">₹2,949</div>'
-    + '</div>'
-    + '<div style="font-size:.68rem;color:#555;margin-bottom:1rem;line-height:1.7">After payment, WhatsApp your payment screenshot to<br><strong>+91 89493 32550</strong><br>Your listing will be activated within 4 hours.</div>'
-    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">'
-      + '<button id="upiPay" style="background:#25D366;color:#fff;border:none;border-radius:10px;padding:.75rem;font-size:.78rem;font-weight:700;cursor:pointer;font-family:inherit">Open UPI App</button>'
-      + '<button onclick="this.closest(\'[style*=fixed]\').remove()" style="background:#F7F2ED;color:#666;border:none;border-radius:10px;padding:.75rem;font-size:.78rem;font-weight:700;cursor:pointer;font-family:inherit">I\'ll Pay Later</button>'
-    + '</div>';
-
-  card.querySelector('#upiPay').onclick = function(){
-    // Open UPI deep link
-    var upiLink = 'upi://pay?pa=homeroots@ybl&pn=Nirmayo&am=2949&cu=INR&tn=Vendor+Annual+Listing+'+(vendorData.bn||'');
-    window.open(upiLink, '_blank');
-    // Also show WhatsApp instruction
-    setTimeout(function(){
-      var waMsg = 'Hi Nirmayo! I just paid ₹2,949 via UPI for my partner listing.\n\nBusiness: '+(vendorData.bn||'')+'\nMobile: '+(vendorData.mb||'')+'\nCity: '+(vendorData.city||'—')+'\n\nPlease activate my listing.';
-      var waLink = 'https://wa.me/918949332550?text=' + encodeURIComponent(waMsg);
-      window.open(waLink, '_blank');
-      modal.remove();
-    }, 2000);
-  };
-
-  modal.appendChild(card);
-  modal.onclick = function(e){ if(e.target===modal) modal.remove(); };
-  document.body.appendChild(modal);
-}
-
-function handlePaymentSuccess(response, vendorData){
-  // Mark vendor as paid and active
-  vendorData.paid = true;
-  vendorData.listingActive = true;
-  var expiry = new Date();
-  expiry.setFullYear(expiry.getFullYear()+1);
-  vendorData.paidTill = expiry.toISOString().split('T')[0];
-  save();
-
-  // Save payment record
-  try {
-    localStorage.setItem('hr_payment_' + vendorData.mb, JSON.stringify({
-      payment_id: response.razorpay_payment_id,
-      amount: response.amount,
-      tier: response.tier,
-      timestamp: Date.now(),
-      vendor: vendorData.bn,
-    }));
-  } catch(e){}
-
-  // Send confirmation WhatsApp
-  var msg = '🏠 *H O M E R O O T S . I N*\n_Partner Directorying Confirmed_\n\n'
-    + '✅ *Payment Received*\n'
-    + '• Business: *' + (vendorData.bn||'') + '*\n'
-    + '• Mobile: +91 ' + (vendorData.mb||'') + '\n'
-    + '• Payment ID: ' + response.razorpay_payment_id + '\n'
-    + '• Amount: ₹' + (response.amount ? (response.amount/100).toLocaleString('en-IN') : '2,949') + '\n\n'
-    + '⏰ *Your listing will be LIVE within 4 hours.*\n\n'
-    + '📞 Support: +91 89493 32550\n'
-    + '🌐 www.nirmayo';
-
-  var enc = encodeURIComponent(msg).replace(/%2A/g,'*');
-  window.open('https://wa.me/918949332550?text=' + enc, '_blank');
-
-  // ── Send T&C copy to PARTNER (their WhatsApp) ────────────
-  setTimeout(function(){
-    var partnerPhone = (vendorData.mb||'').replace(/[^0-9]/g,'');
-    if(partnerPhone && partnerPhone.length >= 10){
-      var signDate = new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
-      var regId = vendorData.regId || 'HR-PENDING';
-
-      var tcMsg = [
-        '*Nirmayo — Partner Agreement*',
-        '========================',
-        'Business: *' + (vendorData.bn||'') + '*',
-        'Owner: ' + (vendorData.on_||''),
-        'Date: ' + signDate,
-        'Reg ID: ' + regId,
-        '',
-        '========================',
-        '*TERMS & CONDITIONS*',
-        '========================',
-        '',
-        '1. Nirmayo is a zero-commission platform. We never charge homeowners or take any cut from your earnings.',
-        '',
-        '2. Listing fee is Rs.2,499 + 18% GST/year (Rs.2,949 total). Payment is collected at registration via UPI, and your listing activates once payment is confirmed.',
-        '',
-        '3. Your listing is valid for 12 months from activation. Renewal reminder sent 30 days before expiry.',
-        '',
-        '4. Respond to homeowner enquiries within 2 hours during working hours. Repeated non-response may result in listing suspension.',
-        '',
-        '5. All information provided must be accurate. Fake credentials, photos or GST numbers will result in immediate removal.',
-        '',
-        '6. Nirmayo reserves the right to verify your credentials via phone number confirmation or profile review before activation.',
-        '',
-        '7. Homeowner reviews and ratings are public. You cannot request removal of genuine reviews.',
-        '',
-        '8. Photos uploaded must be your own work. Copying photos from the internet is strictly prohibited.',
-        '',
-        '9. You agree to professional conduct with all homeowner leads. Abuse or fraud results in permanent removal.',
-        '',
-        '========================',
-        '*DECLARATION*',
-        '',
-        'I, ' + (vendorData.on_||vendorData.bn||'') + ', hereby agree to all the above Terms & Conditions of Nirmayo and confirm that all information submitted is accurate.',
-        '',
-        (vendorData.signature_url ? 'Signature: ' + vendorData.signature_url : 'Signature: On file with Nirmayo'),
-        'Date: ' + signDate,
-        'Place: ' + (vendorData.city||'—') + (vendorData.state?', '+vendorData.state:''),
-        '',
-        '========================',
-        '_This is your official copy of the Nirmayo Partner Agreement._',
-        '_Please save this message for your records._',
-        '',
-        'Nirmayo',
-        '+91 89493 32550',
-        'nirmayo'
-      ].join('\n');
-
-      var tcEnc = encodeURIComponent(tcMsg).replace(/%2A/g,'*');
-      window.open('https://wa.me/91' + partnerPhone + '?text=' + tcEnc, '_blank');
-    }
-  }, 1500); // 1.5 seconds after admin message
-
-  // ── Send welcome WhatsApp to VENDOR ──────────────────────
-  setTimeout(function(){
-    var vendorCity = (vendorData.city||'your area');
-    var FREE_TYPES = ['plumber','electrician'];
-    var isFreeVendor = vendorData.selectedTypes && vendorData.selectedTypes.length > 0 &&
-      vendorData.selectedTypes.every(function(t){
-        var k = t.k || t;
-        return FREE_TYPES.indexOf(k) >= 0;
-      });
-    var welcomeLines = [
-      'Namaskar ' + (vendorData.on_||vendorData.bn||'') + ' ji!',
-      '',
-      'Thank you for registering with *Nirmayo*.',
-      '',
-      'We have received your details for:',
-      '*' + (vendorData.bn||'Your Business') + '*',
-      vendorCity + (vendorData.state?', '+vendorData.state:''),
-      '',
-      isFreeVendor ? 'Status: *Data Collected — No Payment Needed*' : 'Status: *Data Collected — Payment Pending*',
-      isFreeVendor
-        ? 'Plumber & Electrician listings are always free — nothing to pay, now or later. Your listing goes live after verification.'
-        : 'No payment needed today. Complete your ₹2,499 + 18% GST/year payment via UPI to activate your listing.',
-      '',
-      'Our team will review your information and get in touch with you shortly.',
-      '',
-      'For any queries, please contact us:',
-      '*+91 89493 32550*',
-      '',
-      'Nirmayo',
-      '_India\'s zero-commission construction platform_'
-    ];
-    var welcome = welcomeLines.join('\n');
-
-    var vendorPhone = (vendorData.mb||'').replace(/[^0-9]/g,'');
-    if(vendorPhone && vendorPhone.length >= 10){
-      var wEnc = encodeURIComponent(welcome).replace(/%2A/g,'*');
-      window.open('https://wa.me/91' + vendorPhone + '?text=' + wEnc, '_blank');
-    }
-  
-  }, 3000); // 3 second delay so admin message opens first
-
-  // ── Show preview + PDF options after 4 seconds ────────────
-  setTimeout(function(){
-    showSubmissionComplete(vendorData);
-  }, 5000);
-}
-
-// ═══════════════════════════════════════════════════════════
 // SUBMISSION COMPLETE SCREEN
 // Shows: success + two buttons — Preview & PDF
 // ═══════════════════════════════════════════════════════════
@@ -2947,7 +2646,7 @@ function downloadVendorDataJSON(d){
 
 
 function submitToWhatsApp(){
-  // This is called after successful payment
+  // This sends the completed registration to WhatsApp
   // The existing WA code runs here
 }
 
@@ -3295,7 +2994,7 @@ function saveToGoogleSheet(d){
     ref2_name:     (d.references&&d.references[1]&&d.references[1].name)||'',
     ref2_mobile:   (d.references&&d.references[1]&&d.references[1].mobile)||'',
     channel:       d.acquisition_channel||'Online Self-Registration',
-    plan:          isFreeCategorySelection(d.selectedTypes) ? 'Free Forever (Plumber/Electrician)' : 'Rs.2,499 + 18% GST/yr — Payment Pending'
+    plan:          isFreeCategorySelection(d.selectedTypes) ? 'Free Forever (Plumber/Electrician)' : 'Rs.2,499 + 18% GST/yr — Awaiting Area Launch'
   };
 
   fetch(SHEETS_CONFIG.web_app_url, {
@@ -3484,7 +3183,7 @@ function doSubmit(){
         year_est:      D.year_est || '1-3',
         reg_id:        D.regId,
         submitted_at:  D.submittedAt,
-        plan:          D.plan || (isFreeCategorySelection(D.selectedTypes) ? 'Free Forever' : 'Pending Payment'),
+        plan:          D.plan || (isFreeCategorySelection(D.selectedTypes) ? 'Free Forever' : 'Premium — Awaiting Area Launch'),
         brands:        collectAllBrands(),
       });
       showSubmitChoiceScreen();
@@ -3585,7 +3284,7 @@ function showSubmitChoiceScreen(){
   h += '<button onclick="finishSubmit()" style="width:100%;background:#1E3A35;color:#fff;border:none;border-radius:13px;padding:.9rem;font-size:.88rem;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:.5rem">&#127881; Done — View My Partner Card</button>';
   h += '<button onclick="goToHomepageWithData()" style="width:100%;background:#D4A853;color:#1E3A35;border:none;border-radius:13px;padding:.9rem;font-size:.88rem;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:.5rem">&#127968; Go to Nirmayo Homepage</button>';
 
-  h += '<div style="font-size:.62rem;color:#aaa;text-align:center;line-height:1.6">Your data is saved on this device and in Google Sheets.<br>Nirmayo will activate your listing within 4 hours of payment.</div>';
+  h += '<div style="font-size:.62rem;color:#aaa;text-align:center;line-height:1.6">Your data is saved on this device and in Google Sheets.<br>Nirmayo will review your registration and contact you when your area goes live.</div>';
   h += '</div>';
 
   // Store wa msg for sendAll
@@ -3975,7 +3674,7 @@ basic:function(){
     fld('Strongest Selling Points',false,inp('e.g. 20 years exp, free delivery, GST always, same day supply...','usp'))+
     fld('About Your Business',false,'<textarea placeholder="Describe your business, experience, specialisation..." data-f="about" onchange="D.about=this.value;save()" style="min-height:75px">'+esc(D.about)+'</textarea>')+
     subh('Business Verification (Confidential)')+
-    fld('PAN Number',false,'<input placeholder="ABCDE1234F" maxlength="10" style="text-transform:uppercase" value="'+esc(D.pan||'')+'" data-f="pan" onchange="D.pan=this.value.toUpperCase();save()"><div style="font-size:.58rem;color:#888;margin-top:.2rem">Required for annual ₹2,949 payment receipt</div>')+
+    fld('PAN Number',false,'<input placeholder="ABCDE1234F" maxlength="10" style="text-transform:uppercase" value="'+esc(D.pan||'')+'" data-f="pan" onchange="D.pan=this.value.toUpperCase();save()"><div style="font-size:.58rem;color:#888;margin-top:.2rem">Used for verification and future billing</div>')+
     fld('Aadhaar Number (last 4 digits only)',false,'<input type="number" placeholder="e.g. 5678" maxlength="4" value="'+esc(D.aadhaar_last||'')+'" data-f="aadhaar_last" onchange="D.aadhaar_last=this.value;save()"><div style="font-size:.58rem;color:#888;margin-top:.2rem">Only last 4 digits stored for verification</div>')+
     fld('MSME / Udyam Number',false,'<input placeholder="UDYAM-RJ-xx-xxxxxxxx (optional)" value="'+esc(D.msme||'')+'" data-f="msme" onchange="D.msme=this.value;save()"><div style="font-size:.58rem;color:#888;margin-top:.2rem">Shows MSME badge — builds homeowner trust</div>')+
     fld('Team Size',false,chip1(['Solo / 1 person','2–5 people','6–15 people','16–30 people','30+ people'],'team_size'))+
@@ -6623,7 +6322,7 @@ legal:function(){
 
     h+='<div style="background:#F0FBF8;border:1.5px solid #C5E3DC;border-radius:10px;padding:.7rem .85rem;margin-bottom:.75rem;display:flex;align-items:flex-start;gap:.5rem">';
     h+='<span style="font-size:1.1rem;flex-shrink:0">📝</span>';
-    h+='<div><div style="font-size:.75rem;font-weight:700;color:#111">Registration Status: Data Collected — Payment Pending</div>';
+    h+='<div><div style="font-size:.75rem;font-weight:700;color:#111">Registration Status: Data Collected — Awaiting Area Launch</div>';
     h+='<div style="font-size:.65rem;color:#555;margin-top:2px;line-height:1.6">No payment needed today. Once Nirmayo goes live in your area, we\'ll send you a payment link on WhatsApp to activate your listing.</div></div>';
     h+='</div>';
   }
@@ -6634,7 +6333,7 @@ legal:function(){
   h+='<div style="font-size:.72rem;font-weight:800;color:#1E3A35;margin-bottom:.4rem">Nirmayo Partner Agreement</div>';
   var terms=[
     'Nirmayo is a zero-commission platform. We never charge homeowners or take any cut from partner earnings.',
-    'Listing fee is ₹2,499 + 18% GST/year (₹2,949 total). Payment is collected at registration via UPI, and your listing activates once payment is confirmed.',
+    'Listing fee is ₹2,499 + 18% GST/year (₹2,949 total). No payment is collected at registration. Once Nirmayo goes live in your area, we will send a payment link on WhatsApp; your listing activates after payment is confirmed.',
     'Partner listing is valid for 12 months from activation. Renewal reminder sent 30 days before expiry.',
     'Respond to homeowner leads within 2 hours during working hours. Repeated non-response may result in listing suspension.',
     'All information must be accurate. Fake credentials, photos or GST numbers result in immediate removal.',
@@ -6945,7 +6644,7 @@ function downloadVendorPDF(){
 
     // Step 6
     + '<h2>Step 6 — Agreement</h2>'
-    + '<div class="row"><span class="lbl">Plan</span><span class="val">' + (isFreeCategorySelection(d.selectedTypes)?'🆓 Free Forever — Plumber/Electrician':(d.paid?'⭐ Premium — ₹2,499 + 18% GST/year (Paid)':'📝 ₹2,499 + 18% GST/year — Payment Pending')) + '</span></div>'
+    + '<div class="row"><span class="lbl">Plan</span><span class="val">' + (isFreeCategorySelection(d.selectedTypes)?'🆓 Free Forever — Plumber/Electrician':(d.paid?'⭐ Premium — ₹2,499 + 18% GST/year (Paid)':'📝 ₹2,499 + 18% GST/year — Awaiting Area Launch')) + '</span></div>'
     + '<div class="row"><span class="lbl">Agreement</span><span class="val">' + (d.legal_agreed?'✅ Agreed to Nirmayo Terms & Conditions':'⬜ Not agreed') + '</span></div>'
     + ((d.references||[]).filter(function(r){return r.name;}).length?'<div class="row"><span class="lbl">References</span><span class="val">'+(d.references||[]).filter(function(r){return r.name;}).map(function(r){return r.name+(r.mobile?' (+91 '+r.mobile+')':'');}).join(', ')+'</span></div>':'')
 
@@ -7389,7 +7088,7 @@ function backupAllData(){
     msg+='   📱 +91'+(p.mb||'—')+'\n';
     msg+='   📍 '+(p.city||'—')+'\n';
     msg+='   🏷️ '+(cats||'—')+'\n';
-    msg+='   '+(p.paid?'✅ Premium paid':'⏳ Payment pending')+'\n';
+    msg+='   '+(p.paid?'⭐ Premium listing':'⏳ Awaiting area launch')+'\n';
     msg+='   ID: '+(p.regId||'—')+'\n\n';
   });
 
@@ -8084,7 +7783,7 @@ function syncToHomepage(vendorData){
       ph:  (vendorData.whatsapp || '').replace('+91','').replace(/\s/g,''),
       regId: vendorData.reg_id || '',
       submittedAt: vendorData.submitted_at || new Date().toISOString(),
-      plan: vendorData.plan || 'Pending Payment',
+      plan: vendorData.plan || 'Premium — Awaiting Area Launch',
       brands: vendorData.brands || [],
       verified: false,
     };
