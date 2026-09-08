@@ -12734,7 +12734,7 @@ function renderPartners(){
       +'</div>'
       +'<div class="p-rating"><span>⭐</span><span class="p-rating-val">'+v.rating+'</span><span class="p-rating-cnt">('+v.reviews+' reviews)</span></div>'
       +'<div class="p-meta">📍 '+v.area+' · '+v.exp+'</div>'
-      +'<div class="p-verified" style="margin-bottom:.5rem">✓ Nirmayo Verified</div>'
+      + (v.isVerified === true ? '<div class="p-verified" style="margin-bottom:.5rem">✓ Nirmayo Verified</div>' : '')
       // Expandable detail (hidden by default)
       +'<div class="vendor-expand" id="vexp-'+i+'" style="display:none;border-top:1px solid var(--border);padding-top:.55rem;margin-top:.35rem">'
         +'<div style="font-size:.68rem;color:var(--text2);margin-bottom:.5rem;line-height:1.5">Tap WhatsApp to contact directly. Nirmayo does not handle any payments or transactions.</div>'
