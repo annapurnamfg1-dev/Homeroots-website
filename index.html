@@ -10019,6 +10019,7 @@ var VENDORS_DEMO = [
 function loadVendors(){
   try{
     var reg=JSON.parse(localStorage.getItem('hr_registered_vendors')||'[]');
+  reg = reg.filter(function(v){ return v.listingActive === true; });
     var all=reg.concat(VENDORS_DEMO);
     var seen={};
     return all.filter(function(v){
