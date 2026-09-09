@@ -3185,6 +3185,8 @@ function doSubmit(){
         submitted_at:  D.submittedAt,
         plan:          D.plan || (isFreeCategorySelection(D.selectedTypes) ? 'Free Forever' : 'Premium — Awaiting Area Launch'),
         brands:        collectAllBrands(),
+        listingActive: D.listingActive || false,
+        paid: D.paid || false,
       });
       showSubmitChoiceScreen();
     } else {
@@ -7786,6 +7788,8 @@ function syncToHomepage(vendorData){
       plan: vendorData.plan || 'Premium — Awaiting Area Launch',
       brands: vendorData.brands || [],
       verified: false,
+      listingActive: vendorData.listingActive || false,
+      paid: vendorData.paid || false,
     };
 
     // Remove duplicate if same phone exists
