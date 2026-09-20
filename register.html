@@ -3129,10 +3129,13 @@ function submitPhase1BRegistration(D){
     });
   })
   .catch(function(e){
-    // fetch() itself rejected — genuine network failure (DNS, offline,
-    // CORS preflight blocked, etc.) — the server was never reached.
+    // DIAGNOSTIC ONLY — expose the actual browser fetch error.
     console.error('Registration submission network error:', e);
-    return { success:false, stage:'network', reason:'Could not reach the server' };
+    return {
+      success:false,
+      stage:'network',
+      reason:'FETCH_ERROR: ' + ((e && e.message) ? e.message : String(e))
+    };
   });
 }
 
