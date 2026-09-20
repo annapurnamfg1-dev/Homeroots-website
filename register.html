@@ -3046,7 +3046,7 @@ function buildWAMsg(){
 // Plain fetch() to the public Edge Function endpoint — no supabase-js SDK.
 // Authenticated with the anon key, same as any public Supabase Edge Function.
 function submitPhase1BRegistration(D){
-  var structured_memberships = (D.selectedTypes||[])
+  var structured_memberships = (D.selectedTypes||[]); alert('SELECTED_KEYS=' + JSON.stringify(D.selectedTypes||[]));
     .map(function(k){
       var td_k = D.typeData && D.typeData[k] ? D.typeData[k] : {};
       return {
