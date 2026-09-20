@@ -3148,7 +3148,7 @@ function showRegistrationFailureState(result){
     msg += 'Your answers are saved on this device — please try submitting again.';
     if(result){
       try{
-        msg = 'DIAG_STAGE=' + (result.stage||'none');
+        msg = 'DIAG_REASON=' + (result.reason||'none');
       }catch(e){}
     }
   }
