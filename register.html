@@ -3143,6 +3143,9 @@ function showRegistrationFailureState(result){
     msg = 'This phone number is already registered with Nirmayo.';
   } else {
     msg += 'Your answers are saved on this device — please try submitting again.';
+    if(result && result.reason){
+      msg += ' [DIAGNOSTIC: ' + result.reason + ']';
+    }
   }
   showToast(msg);
   // Re-enable the shared Next/Submit button so the partner can retry.
