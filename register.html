@@ -3146,8 +3146,10 @@ function showRegistrationFailureState(result){
     msg = 'This phone number is already registered with Nirmayo.';
   } else {
     msg += 'Your answers are saved on this device — please try submitting again.';
-    if(result && result.reason){
-      msg += ' [DIAGNOSTIC: ' + result.reason + ']';
+    if(result){
+      try{
+        msg += ' [DIAGNOSTIC_RESULT: ' + JSON.stringify(result) + ']';
+      }catch(e){}
     }
   }
   showToast(msg);
