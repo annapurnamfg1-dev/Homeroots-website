@@ -3148,7 +3148,7 @@ function showRegistrationFailureState(result){
     msg += 'Your answers are saved on this device — please try submitting again.';
     if(result){
       try{
-        msg += ' [DIAGNOSTIC_RESULT: ' + JSON.stringify(result) + ']';
+        msg += ' [DIAG: stage=' + (result.stage||'none') + ', reason=' + (result.reason||'none') + ', http=' + (result.http_status||'none') + ', success=' + (result.success===true?'true':result.success===false?'false':'none') + ']';
       }catch(e){}
     }
   }
