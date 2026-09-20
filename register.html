@@ -3183,7 +3183,18 @@ function doSubmit(){
   save();
   saveVendorToHomeroots();      // UNCHANGED — localStorage always succeeds first
 
-  submitPhase1BRegistration(D).then(function(result){
+  var submissionPromise;
+  try{
+    submissionPromise = submitPhase1BRegistration(D);
+  }catch(e){
+    showRegistrationFailureState({
+      stage: 'client',
+      reason: (e && e.message) ? e.message : String(e)
+    });
+    return;
+  }
+
+  submissionPromise.then(function(result){
     if(result && result.success){
       sendEmailAlert(D);
       saveToGoogleSheet(D);
