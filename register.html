@@ -3064,15 +3064,6 @@ function submitPhase1BRegistration(D){
       };
     });
 
-  try{
-    var diagEnergyM = structured_memberships.filter(function(m){return m.category_key==='energy';})[0];
-    alert('DIAG_ENERGY sp_services=' + JSON.stringify((D.typeData&&D.typeData['energy']&&D.typeData['energy'].sp_services)||[]) +
-          ' | typeof SVC_MAP=' + (typeof SVC_MAP) +
-          ' | payload.services=' + JSON.stringify(diagEnergyM?diagEnergyM.services:'NO_ENERGY_MEMBERSHIP'));
-  }catch(diagErr){
-    alert('DIAG_ERROR=' + (diagErr&&diagErr.message?diagErr.message:String(diagErr)));
-  }
-
   var payload = {
     partner_core: {
       business_name: D.bn||'',
