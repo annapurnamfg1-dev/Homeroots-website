@@ -3319,7 +3319,7 @@ function showSubmitChoiceScreen(){
   h += '<button onclick="finishSubmit()" style="width:100%;background:#1E3A35;color:#fff;border:none;border-radius:13px;padding:.9rem;font-size:.88rem;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:.5rem">&#127881; Done — View My Partner Card</button>';
   h += '<button onclick="goToHomepageWithData()" style="width:100%;background:#D4A853;color:#1E3A35;border:none;border-radius:13px;padding:.9rem;font-size:.88rem;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:.5rem">&#127968; Go to Nirmayo Homepage</button>';
 
-  h += '<div style="font-size:.62rem;color:#aaa;text-align:center;line-height:1.6">Your data is saved on this device and in Google Sheets.<br>Nirmayo will review your registration and contact you when your area goes live.</div>';
+  h += '<div style="font-size:.62rem;color:#aaa;text-align:center;line-height:1.6">Your registration has been submitted to Nirmayo and a copy is saved on this device.<br>Nirmayo will review your registration and contact you when your area goes live.</div>';
   h += '</div>';
 
   // Store wa msg for sendAll
@@ -3373,20 +3373,14 @@ function sendAll(){
   showToast('&#10003; Sending via WhatsApp + Email + PDF...');
 }
 
-// Hands this partner's real data to the homepage across domains — the two
-// sites can't share localStorage directly, so we pass it through the URL
-// itself, which works regardless of hosting setup.
+// S7-11: the homepage now lives on the same host as this page, so it can
+// already read this partner's saved data from localStorage ('hr_partners').
+// No cross-domain hand-off is needed any more — this simply returns the
+// current Nirmayo homepage on whichever production host is serving this page.
+// (Previously pointed at the obsolete Netlify HomeRoots site with the
+// partner's data encoded in a ?partner_sync= URL parameter.)
 function buildPartnerSyncUrl(){
-  var phone = window.__lastSavedPartnerPhone;
-  var record = window.__lastSavedPartnerRecord;
-  var homepageUrl = 'https://ubiquitous-empanada-0fd78a.netlify.app';
-  if(!phone || !record) return homepageUrl;
-  try {
-    var payload = encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify({ phone: phone, record: record })))));
-    return homepageUrl + '/?partner_sync=' + payload;
-  } catch(e) {
-    return homepageUrl;
-  }
+  return window.location.origin + '/';
 }
 function goToHomepageWithData(){
   window.location.href = buildPartnerSyncUrl();

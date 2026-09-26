@@ -10248,7 +10248,7 @@ function copyRefCode(){
 }
 function shareReferal(){
   var code=document.getElementById('refCode').value;
-  var msg='🏠 *Nirmayo — India\'s Zero Commission Construction Platform*\n\nJoin as a verified partner and get leads on WhatsApp!\n\n*Referral Code: '+code+'*\n\nRegister: https://ubiquitous-empanada-0fd78a.netlify.app\n\n_Zero commission · ₹2,499 + 18% GST/yr · 148 categories_';
+  var msg='🏠 *Nirmayo — India\'s Zero Commission Construction Platform*\n\nJoin as a verified partner and get leads on WhatsApp!\n\n*Referral Code: '+code+'*\n\nRegister: '+window.location.origin+'/register\n\n_Zero commission · ₹2,499 + 18% GST/yr · 148 categories_';
   window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
 }
 
@@ -14657,7 +14657,8 @@ async function handleJobRequestLink(){
 }
 // ── INIT ───────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', function(){
-  receivePartnerSyncFromURL();
+  // S7-11: obsolete cross-domain ?partner_sync= receiver disabled (sender removed).
+  // receivePartnerSyncFromURL();
   handleJobRequestLink();
   if(new URLSearchParams(window.location.search).get('admin')==='leads') checkAdminAndOpen('leads');
   if(new URLSearchParams(window.location.search).get('admin')==='verify') checkAdminAndOpen('verify');
